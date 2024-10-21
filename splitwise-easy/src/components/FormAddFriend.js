@@ -3,7 +3,7 @@ import Button from "./Button";
 
 function FormAddFriend({ onAddFriend }) {
   const [name, setName] = useState("");
-  const [imgUrl, setImg] = useState("");
+  const [imgUrl, setImg] = useState("https://i.pravatar.cc/48?u=");
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -13,16 +13,17 @@ function FormAddFriend({ onAddFriend }) {
       return;
     }
 
+    const uId = crypto.randomUUID();
     const newFriend = {
-      id: Date.now(),
+      id: uId,
       name: name,
-      image: imgUrl,
+      image: `${imgUrl}${uId}`,
       balance: 0,
     };
 
     onAddFriend(newFriend);
-    setImg("");
     setName("");
+    setImg("https://i.pravatar.cc/48?u=");
   };
 
   return (
@@ -33,12 +34,14 @@ function FormAddFriend({ onAddFriend }) {
         type="text"
         onChange={(e) => setName(e.target.value)}
       />
+
       <label>👯 Image url</label>
       <input
         value={imgUrl}
         type="text"
         onChange={(e) => setImg(e.target.value)}
       />
+
       <Button btnStyle={`button`} onClick={handleSubmit}>
         Add
       </Button>

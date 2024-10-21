@@ -1,18 +1,25 @@
-export default function FriendList({ data, selectFriend }) {
+export default function FriendList({ data, selectedFriend, onSelection }) {
   return (
     <ul>
       {data.map((friend) => (
-        <Friend key={friend.id} friend={friend} selectFriend={selectFriend} />
+        <Friend
+          key={friend.id}
+          friend={friend}
+          selectedFriend={selectedFriend}
+          onSelection={onSelection}
+        />
       ))}
     </ul>
   );
 }
 
-function Friend({ friend, selectFriend }) {
+function Friend({ friend, selectedFriend, onSelection }) {
+  const isSelected = friend.id === selectedFriend?.id;
   return (
-    <li>
+    <li className={isSelected ? "selected" : ""}>
       <img src={friend.image} alt={"Profile"} />
       <h3>{friend.name}</h3>
+
       {friend.balance > 0 ? (
         <p className="green">{`${friend.name} owes you ₹${Math.abs(
           friend.balance
@@ -25,9 +32,8 @@ function Friend({ friend, selectFriend }) {
         <p>{`You and ${friend.name} are even`}</p>
       )}
 
-      <button className="button" onClick={() => selectFriend(friend.id)}>
-        {" "}
-        Select
+      <button className="button" onClick={() => onSelection(friend)}>
+        {isSelected ? "Close" : "Select"}
       </button>
     </li>
   );

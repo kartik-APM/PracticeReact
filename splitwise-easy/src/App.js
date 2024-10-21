@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import FriendList from "./components/FriendList";
 import FormAddFriend from "./components/FormAddFriend";
 import Button from "./components/Button";
@@ -25,29 +25,70 @@ const initialFriends = [
   },
 ];
 
+function setLocalStorage(friends) {
+  localStorage.setItem("friends", JSON.stringify(friends));
+}
+
+function getLocalStorage() {
+  const data = JSON.parse(localStorage.getItem("friends"));
+  if (!data) return initialFriends;
+  console.log(data);
+  return data;
+}
+
 function App() {
-  const [friends, setFriends] = useState(initialFriends);
-  const [openAddFriendForm, setOpenAddFriendForm] = useState(false);
+  const [friends, setFriends] = useState(getLocalStorage());
+  const [selectedFriend, setSelectedFriend] = useState("");
+  const [showAddFriend, setShowAddFriend] = useState(null);
+
+  useEffect(() => {
+    setLocalStorage(friends);
+  }, [friends]);
 
   const handleBtnClick = () => {
-    setOpenAddFriendForm(!openAddFriendForm);
+    setShowAddFriend((show) => !show);
   };
 
-  const addFriend = (newFriend) => {
-    setFriends([...friends, newFriend]);
+  const onFriendSelected = (friend) => {
+    setSelectedFriend((curr) => (curr?.id === friend.id ? null : friend));
+    setShowAddFriend(false);
+  };
+
+  const handleAddFriend = (newFriend) => {
+    setFriends((friends) => [...friends, newFriend]);
+    setShowAddFriend(false);
+  };
+
+  const handleBillSplit = (value) => {
+    const updatedFriendList = friends.map((friend) => {
+      if (friend.id === selectedFriend.id) {
+        return { ...friend, balance: friend.balance + value };
+      }
+      return friend;
+    });
+    setFriends([...updatedFriendList]);
+    setSelectedFriend(null);
   };
 
   return (
-    <div className="App">
+    <div className="app">
       <div className="sidebar">
-        <FriendList data={friends} selectFriend={onFriendSelected} />
-        <div className="form">
-          {openAddFriendForm ? <FormAddFriend onAddFriend={addFriend} /> : null}
-        </div>
+        <FriendList
+          data={friends}
+          selectedFriend={selectedFriend}
+          onSelection={onFriendSelected}
+        />
+        {showAddFriend ? <FormAddFriend onAddFriend={handleAddFriend} /> : null}
         <Button btnStyle={"button"} onClick={handleBtnClick}>
-          {openAddFriendForm ? `Close` : `Add friend`}
+          {showAddFriend ? `Close` : `Add friend`}
         </Button>
       </div>
+      {selectedFriend ? (
+        <SplitBill
+          selectedFriend={selectedFriend}
+          onSplitBill={handleBillSplit}
+        />
+      ) : null}
     </div>
   );
 }
