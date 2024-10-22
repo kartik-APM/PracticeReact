@@ -4,8 +4,8 @@ import Button from "./Button";
 function SplitBill({ selectedFriend: friend, onSplitBill }) {
   const [bill, setBill] = useState("");
   const [yourShare, setYourShare] = useState("");
-  const [whoIsPaying, setWhoIsPaying] = useState("you");
   const paidByFriend = bill - yourShare;
+  const [whoIsPaying, setWhoIsPaying] = useState("you");
 
   const handleSubmit = (e) => {
     e.preventDefault();

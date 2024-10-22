@@ -32,7 +32,6 @@ function setLocalStorage(friends) {
 function getLocalStorage() {
   const data = JSON.parse(localStorage.getItem("friends"));
   if (!data) return initialFriends;
-  console.log(data);
   return data;
 }
 
@@ -85,6 +84,7 @@ function App() {
       </div>
       {selectedFriend ? (
         <SplitBill
+          key={selectedFriend.id}
           selectedFriend={selectedFriend}
           onSplitBill={handleBillSplit}
         />
