@@ -6,31 +6,19 @@ import WatchedListSummary from "./components/watched/WatchedListSummary";
 import WatchedListMovies from "./components/watched/WatchedListMovies";
 import List from "./List";
 import MovieDetails from "./components/movie/MovieDetails";
-
-const KEY = "68da0a77";
-
-// Debounce polyfill function
-function debounce(func, delay) {
-  let timeoutId;
-  return function (...args) {
-    if (timeoutId) clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => {
-      func.apply(this, args);
-    }, delay);
-  };
-}
+import { useMovies } from "./hooks/useMovies";
 
 export default function App() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const [query, setQuery] = useState("");
-  const [movies, setMovies] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+
   const [watched, setWatched] = useState(() => {
     const data = localStorage.getItem("watchedMovies");
     if (data) return JSON.parse(data);
     else return [];
   });
-  const [selectedId, setSelectedId] = useState(null);
+
+  const [movies, isLoading, error] = useMovies(query);
 
   const handleSelectMovie = (id) => {
     if (selectedId === id) handleCloseMovie();
@@ -49,43 +37,9 @@ export default function App() {
     setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   };
 
-  const fetchMovies = useCallback(
-    debounce((searchQuery) => {
-      if (searchQuery.length < 3) {
-        setMovies([]);
-        setError("");
-        return;
-      }
-
-      setIsLoading(true);
-      fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${searchQuery}`)
-        .then((res) => {
-          if (!res.ok)
-            throw new Error("Something went wrong while fetching movies.");
-          return res.json();
-        })
-        .then((data) => {
-          if (data.Response === "False") throw new Error("No movies Found");
-          setError("");
-          setMovies(data.Search);
-        })
-        .catch((err) => {
-          setError(err.message);
-          setMovies([]);
-        })
-        .finally(() => setIsLoading(false));
-    }, 1000),
-    []
-  );
-
   useEffect(() => {
     localStorage.setItem("watchedMovies", JSON.stringify(watched));
   }, [watched]);
-
-  useEffect(() => {
-    handleCloseMovie();
-    fetchMovies(query);
-  }, [query, fetchMovies]);
 
   return (
     <>
