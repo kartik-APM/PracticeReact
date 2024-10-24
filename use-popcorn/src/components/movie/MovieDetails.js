@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import StarRating from "../StarRating";
 import { Loader } from "../../App";
 
@@ -12,6 +12,7 @@ function MovieDetails({
   const [movie, setMovie] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [userRating, setUserRating] = useState(0);
+  const countRef = useRef(0);
 
   const {
     Title: title,
@@ -40,16 +41,20 @@ function MovieDetails({
       imdbRating: Number(imdbRating),
       runtime: Number(runtime.split(" ").at(0)),
       userRating,
-      // countRatingDecisions: countRef.current,
+      countRatingDecisions: countRef.current,
     };
     onMovieAdd(newWatchedMovie);
     onMovieClose();
   };
 
   useEffect(() => {
-    function callback(e) {
+    if (userRating) countRef.current += 1;
+  }, [userRating]);
+
+  useEffect(() => {
+    const callback = (e) => {
       if (e.code === "Escape") onMovieClose();
-    }
+    };
 
     document.addEventListener("keydown", callback);
     return () => {

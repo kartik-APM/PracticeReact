@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Main from "./components/Main";
 import NavBar from "./components/NavBar";
 import SearchListMovies from "./components/searchResult/SearchListMovies";
@@ -25,7 +25,11 @@ export default function App() {
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
+  const [watched, setWatched] = useState(() => {
+    const data = localStorage.getItem("watchedMovies");
+    if (data) return JSON.parse(data);
+    else return [];
+  });
   const [selectedId, setSelectedId] = useState(null);
 
   const handleSelectMovie = (id) => {
@@ -73,6 +77,10 @@ export default function App() {
     }, 1000),
     []
   );
+
+  useEffect(() => {
+    localStorage.setItem("watchedMovies", JSON.stringify(watched));
+  }, [watched]);
 
   useEffect(() => {
     handleCloseMovie();
@@ -125,12 +133,32 @@ export default function App() {
 }
 
 function Search({ query, setQuery }) {
+  const inputEl = useRef(null);
+
+  useEffect(() => {
+    const callback = (e) => {
+      // don't delete the query if search box is focussed
+      if (document.activeElement === inputEl.current) return;
+
+      if (e.code === "Enter") {
+        setQuery("");
+        inputEl.current.focus();
+      }
+    };
+
+    document.addEventListener("keydown", callback);
+    return () => {
+      document.removeEventListener("keydown", callback);
+    };
+  }, [setQuery]);
+
   return (
     <input
-      className="search"
       type="text"
-      placeholder="Search movies..."
+      ref={inputEl}
       value={query}
+      className="search"
+      placeholder="Search movies..."
       onChange={(e) => setQuery(e.target.value)}
     />
   );
