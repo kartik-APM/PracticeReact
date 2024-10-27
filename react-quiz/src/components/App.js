@@ -1,18 +1,20 @@
 import Main from "./Main";
 import Error from "./Error";
-import Header from "./Header";
 import Loader from "./Loader";
+import Header from "./Header";
+import Questions from "./Question";
 import StartScreen from "./StartScreen";
 import { useEffect, useReducer } from "react";
 
 const initialState = {
   questions: [],
   status: "", // 'loading', 'ready', 'error', 'active', 'finished'
-  score: 0,
+  currIdx: 0,
+  answer: null,
+  points: 0,
 };
 
 function reducer(state, action) {
-  console.log(state, action);
   switch (action.type) {
     case "loadingStarted":
       return { ...state, status: "loading" };
@@ -22,6 +24,16 @@ function reducer(state, action) {
       return { ...state, questions: [], status: "error" };
     case "startQuiz":
       return { ...state, status: "active" };
+    case "newAnswer":
+      const question = state.questions[state.currIdx];
+      const isCorrect = question.correctOption === action.payload;
+      return {
+        ...state,
+        answer: action.payload,
+        points: state.points + (isCorrect ? question.points : 0),
+      };
+    case "nextQuestion":
+      return { ...state, currIdx: state.currIdx + 1, answer: null };
     default:
       throw new Error("Action Unknown");
   }
@@ -29,7 +41,7 @@ function reducer(state, action) {
 
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const { questions, status } = state;
+  const { questions, status, currIdx, answer } = state;
   const numQuestions = questions.length;
 
   useEffect(() => {
@@ -41,11 +53,6 @@ function App() {
       .catch((err) => dispatch({ type: "dataLoadingFailed" }));
   }, []);
 
-  const handleStartQuiz = () => {
-    dispatch({ type: "startQuiz" });
-  };
-
-  console.log(state);
   return (
     <div className="app">
       <Header />
@@ -53,10 +60,24 @@ function App() {
         {status === "loading" && <Loader />}
         {status === "error" && <Error />}
         {status === "ready" && (
-          <StartScreen
-            numQuestions={numQuestions}
-            onStartQuiz={handleStartQuiz}
-          />
+          <StartScreen numQuestions={numQuestions} dispatch={dispatch} />
+        )}
+        {status === "active" && (
+          <>
+            <Questions
+              question={questions[currIdx]}
+              dispatch={dispatch}
+              answer={answer}
+            />
+            {answer !== null ? (
+              <button
+                className="btn btn-ui"
+                onClick={() => dispatch({ type: "nextQuestion" })}
+              >
+                Next
+              </button>
+            ) : null}
+          </>
         )}
       </Main>
     </div>
